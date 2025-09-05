@@ -26,17 +26,20 @@ import json
 from copy import deepcopy
 from functools import lru_cache
 
-from jinja2 import Environment
 from PIL import Image
 from ...image_utils import ImageInput
 from ...processing_utils import ProcessorMixin, ProcessingKwargs, Unpack, ImagesKwargs, AudioKwargs
 from ...tokenization_utils_base import PreTokenizedInput, TextInput
 
 from ...feature_extraction_utils import BatchFeature
-from ...utils import is_torch_device, is_torch_dtype, is_torch_available, requires_backends, TensorType, logging
+from ...utils import is_torch_device, is_torch_dtype, requires_backends, TensorType, logging
+from ...utils.import_utils import is_jinja_available, is_torch_available
 
 if is_torch_available():
     import torch
+
+if is_jinja_available():
+    from jinja2 import Environment
 
 logger = logging.get_logger(__name__)
 
@@ -717,7 +720,6 @@ class MiniCPM_o_2_6Processor(ProcessorMixin):
         return audio_placeholder
 
     @property
-    # Copied from transformers.models.clip.processing_clip.CLIPProcessor.model_input_names
     def model_input_names(self):
         tokenizer_input_names = self.tokenizer.model_input_names
         image_processor_input_names = self.image_processor.model_input_names
