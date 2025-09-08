@@ -26,14 +26,16 @@ import json
 from copy import deepcopy
 from functools import lru_cache
 
-from PIL import Image
 from ...image_utils import ImageInput
 from ...processing_utils import ProcessorMixin, ProcessingKwargs, Unpack, ImagesKwargs, AudioKwargs
 from ...tokenization_utils_base import PreTokenizedInput, TextInput
 
 from ...feature_extraction_utils import BatchFeature
 from ...utils import is_torch_device, is_torch_dtype, requires_backends, TensorType, logging
-from ...utils.import_utils import is_jinja_available, is_torch_available
+from ...utils.import_utils import is_jinja_available, is_torch_available, is_vision_available
+
+if is_vision_available():
+    from PIL import Image
 
 if is_torch_available():
     import torch

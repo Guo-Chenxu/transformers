@@ -18,13 +18,15 @@ from typing import Optional, Union
 
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
-from PIL import Image
 from ...image_processing_utils_fast import BaseImageProcessorFast
 from ...image_transforms import to_pil_image
 from ...image_utils import valid_images, make_nested_list_of_images
 from ...utils import TensorType, IMAGENET_STANDARD_MEAN, IMAGENET_STANDARD_STD
-from ...utils.import_utils import is_torchvision_available, is_torchvision_v2_available
+from ...utils.import_utils import is_torchvision_available, is_torchvision_v2_available, is_vision_available
 from .processing_minicpm_o_2_6 import MiniCPMOBatchFeature
+
+if is_vision_available():
+    from PIL import Image
 
 if is_torchvision_available():
     if is_torchvision_v2_available():
