@@ -45,6 +45,8 @@ from transformers.testing_utils import (
 if is_torch_available():
     import torch
 
+    from transformers import MiniCPM_o_2_6ForConditionalGeneration
+
 if is_soundfile_available():
     import soundfile as sf
 
@@ -55,6 +57,8 @@ if _is_package_available("moviepy"):
 @require_torch
 class MiniCPM_o_2_6ModelIngestionTest(unittest.TestCase):
     """Test for MiniCPM_o_2_6Model."""
+
+    all_model_classes = (MiniCPM_o_2_6ForConditionalGeneration,) if is_torch_available() else ()
 
     def setUp(self):
         """initial test environment"""
