@@ -511,6 +511,26 @@ Download the int4 quantized version for lower GPU memory (7GB) usage: [MiniCPM-o
 [[autodoc]] MiniCPM_o_2_6ForConditionalGeneration
     - forward
 
+## MiniCPMConditionalChatTTSModel
+
+[[autodoc]] MiniCPMConditionalChatTTSModel
+    - generate
+
+## MiniCPMConditionalTTSTextModel
+
+[[autodoc]] MiniCPMConditionalTTSTextModel
+    - forward
+
+## MiniCPMVisionModel
+
+[[autodoc]] MiniCPMVisionModel
+    - forward
+
+## MiniCPM_o_2_6TextModel
+
+[[autodoc]] MiniCPM_o_2_6TextModel
+    - forward
+
 ## License
 
 #### Model License

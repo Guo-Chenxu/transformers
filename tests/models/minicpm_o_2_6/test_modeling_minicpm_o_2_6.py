@@ -29,11 +29,7 @@ from transformers import (
     AutoModel,
     AutoProcessor,
 )
-from transformers.utils.import_utils import(
-    is_torch_available,
-    is_soundfile_available,
-    _is_package_available
-)
+from transformers.utils.import_utils import is_torch_available, is_soundfile_available, _is_package_available
 from transformers.testing_utils import (
     require_torch,
     slow,
@@ -240,7 +236,7 @@ class MiniCPM_o_2_6ModelIngestionTest(unittest.TestCase):
     def test_audio_mimick(self):
         if not is_soundfile_available():
             self.skipTest("test requires soundfile")
-    
+
         try:
             self.model.init_tts()
 
