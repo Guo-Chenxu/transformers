@@ -81,6 +81,9 @@ class ChatTTSProcessor:
             raise ValueError(
                 f"Length mismatch: text_list has {len(text_list)} items, audio_list has {len(audio_list)} items"
             )
+            raise ValueError(
+                f"Length mismatch: text_list has {len(text_list)} items, audio_list has {len(audio_list)} items"
+            )
 
         input_ids_varlen = []
         for text in text_list:
@@ -258,6 +261,8 @@ class VoiceChecker:
         num_chunks = len(audio_wav) // chunk_size
         mel_chunk_size = mel_spec.shape[-1] // num_chunks
         for i in range(num_chunks):
+            audio_chunk = audio_wav[i * chunk_size : (i + 1) * chunk_size]
+            mel_spec_chunk = mel_spec[:, i * mel_chunk_size : (i + 1) * mel_chunk_size]
             audio_chunk = audio_wav[i * chunk_size : (i + 1) * chunk_size]
             mel_spec_chunk = mel_spec[:, i * mel_chunk_size : (i + 1) * mel_chunk_size]
 

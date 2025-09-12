@@ -657,6 +657,7 @@ class MiniCPM_o_2_6ForConditionalGeneration(MiniCPM_o_2_6PreTrainedModel, Genera
         else:
             self.omni_config.vision_config._attn_implementation = "eager"
         model = MiniCPMVisionModel(self.omni_config.vision_config)
+        model = MiniCPMVisionModel(self.omni_config.vision_config)
         if self.omni_config.drop_vision_last_layer:
             model.encoder.layers = model.encoder.layers[:-1]
 
@@ -679,6 +680,7 @@ class MiniCPM_o_2_6ForConditionalGeneration(MiniCPM_o_2_6PreTrainedModel, Genera
         return model
 
     def init_tts_module(self):
+        model = MiniCPMConditionalChatTTSModel(self.omni_config.tts_config)
         model = MiniCPMConditionalChatTTSModel(self.omni_config.tts_config)
         return model
 
@@ -1011,7 +1013,9 @@ class MiniCPM_o_2_6ForConditionalGeneration(MiniCPM_o_2_6PreTrainedModel, Genera
         """
         if stream_input:
             audio_embeddings = self.get_audio_embedding_streaming(audio_features, audio_feature_lens)
+            audio_embeddings = self.get_audio_embedding_streaming(audio_features, audio_feature_lens)
         else:
+            audio_embeddings = self.get_audio_embedding(audio_features, audio_feature_lens, chunk_length)
             audio_embeddings = self.get_audio_embedding(audio_features, audio_feature_lens, chunk_length)
 
         bs = len(input_embeddings)
@@ -1169,6 +1173,9 @@ class MiniCPM_o_2_6ForConditionalGeneration(MiniCPM_o_2_6PreTrainedModel, Genera
         if input_ids is None:
             raise ValueError("input_ids cannot be None")
         if len(input_ids) != len(pixel_values):
+            raise ValueError(
+                f"Length mismatch: input_ids length {len(input_ids)} != pixel_values length {len(pixel_values)}"
+            )
             raise ValueError(
                 f"Length mismatch: input_ids length {len(input_ids)} != pixel_values length {len(pixel_values)}"
             )
@@ -3007,6 +3014,7 @@ class CustomRepetitionPenaltyLogitsProcessorRepeat:
 class MiniCPMConditionalChatTTSModelGenerationOutput(ModelOutput):
     """
     Output class for MiniCPMConditionalChatTTSModel generation.
+    Output class for MiniCPMConditionalChatTTSModel generation.
 
     Args:
         new_ids (torch.LongTensor): Newly generated audio code sequence, shape (batch_size, sequence_length, num_vq).
@@ -3473,6 +3481,9 @@ def apply_spk_emb(
         mask_ = input_ids_ == spk_emb_token_id  # [batch_size, seq_len_max]
         nonzero_position_idx = mask_.nonzero(as_tuple=False)  # [num_spk_emb, 1]
         if nonzero_position_idx.shape[0] != num_spk_embs:
+            raise ValueError(
+                f"Expected {num_spk_embs} speaker embedding tokens, but found {nonzero_position_idx.shape[0]}"
+            )
             raise ValueError(
                 f"Expected {num_spk_embs} speaker embedding tokens, but found {nonzero_position_idx.shape[0]}"
             )
@@ -3959,6 +3970,9 @@ class MiniCPMConditionalChatTTSModel(PreTrainedModel):
                 raise ValueError(
                     f"Progress {progress} does not match expected value {past_key_values[0][0].shape[2] + 1}"
                 )
+                raise ValueError(
+                    f"Progress {progress} does not match expected value {past_key_values[0][0].shape[2] + 1}"
+                )
 
             if audio_bos:
                 # Generate the first token, activate the model with `self.audio_bos_token_id`, the model will predict a new audio token. This is a special case because without the `audio bos token`, it is impossible to generate the first audio token in our streaming setting.
@@ -4256,6 +4270,9 @@ class Resampler(nn.Module):
 
     def forward(self, x, tgt_sizes=None):
         if x.shape[0] != tgt_sizes.shape[0]:
+            raise ValueError(
+                f"Batch size mismatch: x.shape[0]={x.shape[0]} != tgt_sizes.shape[0]={tgt_sizes.shape[0]}"
+            )
             raise ValueError(
                 f"Batch size mismatch: x.shape[0]={x.shape[0]} != tgt_sizes.shape[0]={tgt_sizes.shape[0]}"
             )

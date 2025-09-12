@@ -181,6 +181,7 @@ class MiniCPM_o_2_6Config(PretrainedConfig):
     This is the configuration class to store the configuration of a [`MiniCPM_o_2_6Model`]. It is used to instantiate a
     MiniCPM-o-2.6 model according to the specified arguments, defining the model architecture. Instantiating a configuration
     with the defaults will yield a similar configuration to that of the MiniCPM-o-2.6
+    with the defaults will yield a similar configuration to that of the MiniCPM-o-2.6
     [openbmb/MiniCPM-o-2_6](https://huggingface.co/openbmb/MiniCPM-o-2_6) architecture.
 
     The MiniCPM-o-2.6 model is a multimodal large language model that supports text, image, and audio inputs. It consists of
@@ -280,6 +281,7 @@ class MiniCPM_o_2_6Config(PretrainedConfig):
             self.text_config = text_config
 
         if vision_config is None:
+            self.vision_config = MiniCPMVisionConfig(**self.default_vision_config)
             self.vision_config = MiniCPMVisionConfig(**self.default_vision_config)
             logger.info("vision_config is None, using default vision config")
         elif isinstance(vision_config, dict):
@@ -433,6 +435,7 @@ class MiniCPM_o_2_6ForConditionalGeneration(MiniCPM_o_2_6PreTrainedModel, Genera
         else:
             self.omni_config.vision_config._attn_implementation = "eager"
         model = MiniCPMVisionModel(self.omni_config.vision_config)
+        model = MiniCPMVisionModel(self.omni_config.vision_config)
         if self.omni_config.drop_vision_last_layer:
             model.encoder.layers = model.encoder.layers[:-1]
 
@@ -455,6 +458,7 @@ class MiniCPM_o_2_6ForConditionalGeneration(MiniCPM_o_2_6PreTrainedModel, Genera
         return model
 
     def init_tts_module(self):
+        model = MiniCPMConditionalChatTTSModel(self.omni_config.tts_config)
         model = MiniCPMConditionalChatTTSModel(self.omni_config.tts_config)
         return model
 
@@ -787,7 +791,9 @@ class MiniCPM_o_2_6ForConditionalGeneration(MiniCPM_o_2_6PreTrainedModel, Genera
         """
         if stream_input:
             audio_embeddings = self.get_audio_embedding_streaming(audio_features, audio_feature_lens)
+            audio_embeddings = self.get_audio_embedding_streaming(audio_features, audio_feature_lens)
         else:
+            audio_embeddings = self.get_audio_embedding(audio_features, audio_feature_lens, chunk_length)
             audio_embeddings = self.get_audio_embedding(audio_features, audio_feature_lens, chunk_length)
 
         bs = len(input_embeddings)
@@ -945,6 +951,9 @@ class MiniCPM_o_2_6ForConditionalGeneration(MiniCPM_o_2_6PreTrainedModel, Genera
         if input_ids is None:
             raise ValueError("input_ids cannot be None")
         if len(input_ids) != len(pixel_values):
+            raise ValueError(
+                f"Length mismatch: input_ids length {len(input_ids)} != pixel_values length {len(pixel_values)}"
+            )
             raise ValueError(
                 f"Length mismatch: input_ids length {len(input_ids)} != pixel_values length {len(pixel_values)}"
             )
@@ -2709,6 +2718,9 @@ def apply_spk_emb(
             raise ValueError(
                 f"Expected {num_spk_embs} speaker embedding tokens, but found {nonzero_position_idx.shape[0]}"
             )
+            raise ValueError(
+                f"Expected {num_spk_embs} speaker embedding tokens, but found {nonzero_position_idx.shape[0]}"
+            )
         begin_idx = nonzero_position_idx.min()
         end_idx = nonzero_position_idx.max()
         input_embeds[idx, begin_idx : end_idx + 1, :] = spk_emb_
@@ -2814,6 +2826,7 @@ class CustomRepetitionPenaltyLogitsProcessorRepeat:
 @dataclass
 class MiniCPMConditionalChatTTSModelGenerationOutput(ModelOutput):
     """
+    Output class for MiniCPMConditionalChatTTSModel generation.
     Output class for MiniCPMConditionalChatTTSModel generation.
 
     Args:
@@ -3526,6 +3539,9 @@ class MiniCPMConditionalChatTTSModel(PreTrainedModel):
                 raise ValueError(
                     f"Progress {progress} does not match expected value {past_key_values[0][0].shape[2] + 1}"
                 )
+                raise ValueError(
+                    f"Progress {progress} does not match expected value {past_key_values[0][0].shape[2] + 1}"
+                )
 
             if audio_bos:
                 # Generate the first token, activate the model with `self.audio_bos_token_id`, the model will predict a new audio token. This is a special case because without the `audio bos token`, it is impossible to generate the first audio token in our streaming setting.
@@ -3843,6 +3859,9 @@ class Resampler(nn.Module):
 
     def forward(self, x, tgt_sizes=None):
         if x.shape[0] != tgt_sizes.shape[0]:
+            raise ValueError(
+                f"Batch size mismatch: x.shape[0]={x.shape[0]} != tgt_sizes.shape[0]={tgt_sizes.shape[0]}"
+            )
             raise ValueError(
                 f"Batch size mismatch: x.shape[0]={x.shape[0]} != tgt_sizes.shape[0]={tgt_sizes.shape[0]}"
             )
@@ -4757,6 +4776,17 @@ class MiniCPMVisionModel(MiniCPMVisionPreTrainedModel):
         )
 
 
+__all__ = [
+    "MiniCPM_o_2_6Config",
+    "MiniCPM_o_2_6ForConditionalGeneration",
+    "MiniCPM_o_2_6PreTrainedModel",
+    "MiniCPMConditionalChatTTSModel",
+    "MiniCPMConditionalTTSTextModel",
+    "MiniCPMConditionalTTSTextPreTrainedModel",
+    "MiniCPMVisionModel",
+    "MiniCPMVisionPreTrainedModel",
+    "MiniCPM_o_2_6TextModel",
+]
 __all__ = [
     "MiniCPM_o_2_6Config",
     "MiniCPM_o_2_6ForConditionalGeneration",

@@ -807,6 +807,7 @@ class MiniCPM_o_2_6Config(PretrainedConfig):
     This is the configuration class to store the configuration of a [`MiniCPM_o_2_6Model`]. It is used to instantiate a
     MiniCPM-o-2.6 model according to the specified arguments, defining the model architecture. Instantiating a configuration
     with the defaults will yield a similar configuration to that of the MiniCPM-o-2.6
+    with the defaults will yield a similar configuration to that of the MiniCPM-o-2.6
     [openbmb/MiniCPM-o-2_6](https://huggingface.co/openbmb/MiniCPM-o-2_6) architecture.
 
     The MiniCPM-o-2.6 model is a multimodal large language model that supports text, image, and audio inputs. It consists of
@@ -906,6 +907,7 @@ class MiniCPM_o_2_6Config(PretrainedConfig):
             self.text_config = text_config
 
         if vision_config is None:
+            self.vision_config = MiniCPMVisionConfig(**self.default_vision_config)
             self.vision_config = MiniCPMVisionConfig(**self.default_vision_config)
             logger.info("vision_config is None, using default vision config")
         elif isinstance(vision_config, dict):
