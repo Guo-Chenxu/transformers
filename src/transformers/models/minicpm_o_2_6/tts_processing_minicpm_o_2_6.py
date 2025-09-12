@@ -14,15 +14,13 @@
 # limitations under the License.
 
 import re
-
 from typing import Literal
 
 import numpy as np
 
-from ...utils.import_utils import is_torch_available, is_torchaudio_available, is_librosa_available
-
-
 from ...utils import logging
+from ...utils.import_utils import is_librosa_available, is_torch_available, is_torchaudio_available
+
 
 if is_librosa_available():
     import librosa

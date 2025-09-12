@@ -20,62 +20,59 @@ from copy import deepcopy
 from dataclasses import dataclass
 from functools import partial
 from threading import Thread
-from typing import Optional, Union, Callable
+from typing import Callable, Optional, Union
 
 import numpy as np
-from PIL import Image
 import soundfile as sf
-from tqdm import tqdm
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.utils.parametrize as P
+from huggingface_hub import hf_hub_download
+from PIL import Image
 from torch.nn.init import _calculate_fan_in_and_fan_out
 from torch.nn.utils.parametrizations import weight_norm
-from huggingface_hub import hf_hub_download
+from tqdm import tqdm
 
-from ...modeling_utils import PreTrainedModel
+from ...activations import ACT2FN
+from ...cache_utils import Cache, DynamicCache, EncoderDecoderCache, StaticCache
+from ...configuration_utils import PretrainedConfig
+from ...generation import GenerationMixin
+from ...generation.logits_process import LogitsProcessor, TopKLogitsWarper, TopPLogitsWarper
+from ...generation.streamers import TextIteratorStreamer
+from ...generation.utils import GenerateOutput
+from ...integrations import is_deepspeed_zero3_enabled
+from ...modeling_attn_mask_utils import AttentionMaskConverter, _prepare_4d_attention_mask
+from ...modeling_flash_attention_utils import FlashAttentionKwargs, _get_unpad_data
 from ...modeling_outputs import (
     BaseModelOutput,
     BaseModelOutputWithPast,
     BaseModelOutputWithPooling,
     CausalLMOutputWithPast,
 )
+from ...modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
+from ...processing_utils import Unpack
 from ...utils import (
-    logging,
-    add_start_docstrings,
-    add_start_docstrings_to_model_forward,
-    replace_return_docstrings,
-    can_return_tuple,
-    auto_docstring,
     ModelOutput,
     TransformersKwargs,
+    add_start_docstrings,
+    add_start_docstrings_to_model_forward,
+    auto_docstring,
+    can_return_tuple,
+    logging,
+    replace_return_docstrings,
 )
 from ...utils.import_utils import _is_package_available, is_flash_attn_2_available
-from ...cache_utils import Cache, DynamicCache, EncoderDecoderCache, StaticCache
-from ...configuration_utils import PretrainedConfig
-from ...generation import GenerationMixin
-from ...generation.streamers import TextIteratorStreamer
-from ...generation.utils import GenerateOutput
-from ...generation.logits_process import LogitsProcessor, TopKLogitsWarper, TopPLogitsWarper
-from ...modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
-from ...activations import ACT2FN
-from ...modeling_attn_mask_utils import _prepare_4d_attention_mask, AttentionMaskConverter
-from ...integrations import is_deepspeed_zero3_enabled
-from ...modeling_flash_attention_utils import FlashAttentionKwargs, _get_unpad_data
-from ...processing_utils import Unpack
-
-from ..siglip.configuration_siglip import SiglipVisionConfig
-from ..siglip.modeling_siglip import SiglipEncoderLayer, SiglipEncoder, SiglipMLP, SiglipVisionModelOutput
-from ..whisper.configuration_whisper import WhisperConfig
-from ..whisper.modeling_whisper import WhisperEncoder, WhisperAttention, WhisperEncoderLayer
+from ..llama.configuration_llama import LlamaConfig
+from ..llama.modeling_llama import LlamaDecoderLayer, LlamaModel, LlamaPreTrainedModel
 from ..qwen2.configuration_qwen2 import Qwen2Config
 from ..qwen2.modeling_qwen2 import Qwen2Model, Qwen2PreTrainedModel
-from ..llama.configuration_llama import LlamaConfig
-from ..llama.modeling_llama import LlamaModel, LlamaDecoderLayer, LlamaPreTrainedModel
+from ..siglip.configuration_siglip import SiglipVisionConfig
+from ..siglip.modeling_siglip import SiglipEncoder, SiglipEncoderLayer, SiglipMLP, SiglipVisionModelOutput
+from ..whisper.configuration_whisper import WhisperConfig
+from ..whisper.modeling_whisper import WhisperAttention, WhisperEncoder, WhisperEncoderLayer
+from .tts_processing_minicpm_o_2_6 import ChatTTSProcessor, NumberToTextConverter, VoiceChecker, sentence_end
 
-from .tts_processing_minicpm_o_2_6 import NumberToTextConverter, sentence_end, VoiceChecker, ChatTTSProcessor
 
 if is_flash_attn_2_available():
     from flash_attn import flash_attn_func, flash_attn_varlen_func
@@ -1036,7 +1033,7 @@ class MiniCPM_o_2_6ForConditionalGeneration(MiniCPM_o_2_6PreTrainedModel, Genera
                     tts_config={"top_p": 0.7, "top_k": 20, "repetition_penalty": 1.0},
                     force_no_stop=force_no_stop,
                 )
-                wav_numpy, sr = self.decode_mel_to_audio(mel_spec, kwargs.get("output_audio_path", None))
+                wav_numpy, sr = self.decode_mel_to_audio(mel_spec, kwargs.get("output_audio_path"))
 
             if return_spk_embed:
                 spk_embeds = self._get_last_spk_embeds(model_inputs, outputs)
