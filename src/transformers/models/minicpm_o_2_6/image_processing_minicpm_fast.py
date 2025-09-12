@@ -70,8 +70,8 @@ class MiniCPMVImageProcessorFast(BaseImageProcessorFast):
         max_slice_nums=9,
         scale_resolution=448,
         patch_size=14,
-        image_mean: list[float] = None,
-        image_std: list[float] = None,
+        image_mean: Optional[list[float]] = None,
+        image_std: Optional[list[float]] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -229,7 +229,7 @@ class MiniCPMVImageProcessorFast(BaseImageProcessorFast):
     def preprocess(
         self,
         images: Union[Image.Image, list[Image.Image], list[list[Image.Image]]],
-        max_slice_nums: int = None,
+        max_slice_nums: Optional[int] = None,
         return_tensors: Optional[Union[str, TensorType]] = None,
         do_normalize: bool = True,
         **kwargs,

@@ -1187,11 +1187,11 @@ class MiniCPM_o_2_6ForConditionalGeneration(MiniCPM_o_2_6PreTrainedModel, Genera
     ):
         if past_key_values is not None:
             if isinstance(past_key_values, Cache):
-                cache_length = past_key_values.get_seq_length()
+                # cache_length = past_key_values.get_seq_length()
                 # past_length = past_key_values.seen_tokens
                 past_length = past_key_values.get_seq_length()
-            else:
-                cache_length = past_length = past_key_values[0][0].shape[2]
+            # else:
+            #     cache_length = past_length = past_key_values[0][0].shape[2]
 
             # Keep only the unprocessed tokens:
             # 1 - If the length of the attention_mask exceeds the length of input_ids, then we are in a setting where
@@ -1306,7 +1306,7 @@ class MiniCPM_o_2_6ForConditionalGeneration(MiniCPM_o_2_6PreTrainedModel, Genera
             torch.hstack([(spk_start_idx + 1).unsqueeze(-1), spk_end_idx.unsqueeze(-1)])
         ]  # List[Tensor], (1,2)
 
-        cache_length = past_length = self.llm_past_key_values[0][0].shape[2]
+        cache_length = self.llm_past_key_values[0][0].shape[2]
         attention_mask = torch.ones((1, cache_length + input_ids.shape[1]), dtype=torch.bool, device=self.device)
 
         generation_config["max_new_tokens"] = max_new_tokens
@@ -1354,7 +1354,7 @@ class MiniCPM_o_2_6ForConditionalGeneration(MiniCPM_o_2_6PreTrainedModel, Genera
                 use_cache=True,
                 max_new_tokens=3,  # reduce first token delay
                 pad_token_id=0,
-                output_hidden_states=True if first_chunk else False,
+                output_hidden_states=bool(first_chunk),
                 return_dict_in_generate=True,
                 eos_token_id=terminators,
                 **generation_config,
@@ -1374,7 +1374,7 @@ class MiniCPM_o_2_6ForConditionalGeneration(MiniCPM_o_2_6PreTrainedModel, Genera
 
             self.llm_past_key_values = outputs.past_key_values
             input_ids = outputs.sequences[:, -1:]
-            cache_length = past_length = self.llm_past_key_values[0][0].shape[2]
+            cache_length = self.llm_past_key_values[0][0].shape[2]
             attention_mask = torch.ones((1, cache_length + input_ids.shape[1]), dtype=torch.bool, device=self.device)
 
             res = {"text": text}
@@ -2139,7 +2139,7 @@ class MiniCPMWhisperAttention(WhisperAttention):
 
 # Borrowed from transformers.models.whisper.modeling_whisper.WhisperEncoderLayer and add use_cache for streaming inference
 class MiniCPMWhisperEncoderLayer(WhisperEncoderLayer):
-    def __init__(self, config: MiniCPMWhisperConfig, layer_idx: int = None):
+    def __init__(self, config: MiniCPMWhisperConfig, layer_idx: Optional[int] = None):
         super().__init__()
         self.embed_dim = config.d_model
         self.self_attn = MiniCPMWhisperAttention(
@@ -2523,7 +2523,7 @@ class GFSQ(nn.Module):
         eps=1e-5,
         transpose=True,
     ):
-        super(GFSQ, self).__init__()
+        super().__init__()
         self.quantizer = GroupedResidualFSQ(
             dim=dim,
             levels=list(levels),
@@ -4497,7 +4497,7 @@ class MiniCPMVisionEncoderLayer(SiglipEncoderLayer):
         self._use_flash_attention_2 = config._attn_implementation == "flash_attention_2"
         self.self_attn = (
             MiniCPMVisionAttention(config)
-            if not config._attn_implementation == "flash_attention_2"
+            if config._attn_implementation != "flash_attention_2"
             else MiniCPMVisionFlashAttention2(config)
         )
         self.layer_norm1 = nn.LayerNorm(self.embed_dim, eps=config.layer_norm_eps)
